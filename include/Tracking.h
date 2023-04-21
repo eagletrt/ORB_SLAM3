@@ -139,6 +139,7 @@ public:
     Frame mLastFrame;
 
     cv::Mat mImGray;
+    cv::Mat mImColor;
 
     // Initialization Variables (Monocular)
     std::vector<int> mvIniLastMatches;
@@ -197,9 +198,10 @@ protected:
     // Main tracking function. It is independent of the input sensor.
     void Track();
 
-    // Map initialization for stereo and RGB-D
+    // Map initialization for stereo 
     void StereoInitialization();
-
+    // Map initialization for RGB-D
+    void RgbdInitialization();
     // Map initialization for monocular
     void MonocularInitialization();
     //void CreateNewMapPoints();
