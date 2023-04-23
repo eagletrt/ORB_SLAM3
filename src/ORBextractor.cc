@@ -777,8 +777,14 @@ namespace ORB_SLAM3
 
         return vResultKeys;
     }
-
-    void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoints)
+    /**
+     * @brief 
+     * 
+     * @param allKeypoints 
+     * @param mask 
+     * @param mask_min_value minimum value that a pixel in the mask must have to be considered valid
+     */
+    void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoints, const cv::Mat& mask)
     {
         allKeypoints.resize(nlevels);
 
@@ -859,12 +865,24 @@ namespace ORB_SLAM3
                     }
 
                     if(!vKeysCell.empty())
-                    {
+                    {   
+                        // filter out keypoints outside the mask
                         for(vector<cv::KeyPoint>::iterator vit=vKeysCell.begin(); vit!=vKeysCell.end();vit++)
                         {
-                            (*vit).pt.x+=j*wCell;
-                            (*vit).pt.y+=i*hCell;
-                            vToDistributeKeys.push_back(*vit);
+                            // include only keypoints whose corresponding pixel value in the mask is greater than 0 
+                            if (mask.empty() || mask.at<uchar>(vit->pt.y, vit->pt.x) > 0)
+                            {
+                                cv::Rect roi(vit->pt.x - PATCH_SIZE/2, vit->pt.y - PATCH_SIZE/2, PATCH_SIZE, PATCH_SIZE);
+                                cv::Mat patch = mvImagePyramid[level](roi);
+                                // if the patch is empty the keypoint is skipped
+                                if (cv::countNonZero(patch) == 0) {
+                                    continue;
+                                }
+                                // offset x,y coordinates of the keypoint by the x,y coordinates of the the grid cell
+                                (*vit).pt.x+=j*wCell;
+                                (*vit).pt.y+=i*hCell;
+                                vToDistributeKeys.push_back(*vit);
+                            }
                         }
                     }
 
@@ -1097,7 +1115,9 @@ namespace ORB_SLAM3
         ComputePyramid(image);
 
         vector < vector<KeyPoint> > allKeypoints;
-        ComputeKeyPointsOctTree(allKeypoints);
+        // Get mask matrix
+        Mat mask = _mask.getMat();
+        ComputeKeyPointsOctTree(allKeypoints, mask);
         //ComputeKeyPointsOld(allKeypoints);
 
         Mat descriptors;
