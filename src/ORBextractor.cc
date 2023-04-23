@@ -777,13 +777,7 @@ namespace ORB_SLAM3
 
         return vResultKeys;
     }
-    /**
-     * @brief 
-     * 
-     * @param allKeypoints 
-     * @param mask 
-     * @param mask_min_value minimum value that a pixel in the mask must have to be considered valid
-     */
+
     void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoints, const cv::Mat& mask)
     {
         allKeypoints.resize(nlevels);
@@ -885,7 +879,6 @@ namespace ORB_SLAM3
                             }
                         }
                     }
-
                 }
             }
 
