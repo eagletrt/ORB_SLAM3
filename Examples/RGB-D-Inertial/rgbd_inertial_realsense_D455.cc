@@ -114,6 +114,7 @@ static struct argp_option options[] = {
   {"replay",    'r',    0,      0,  "Replay data from specified rosbag file" },
   {"bag",       'b',    "FILE", 0,  "Rosbag file" },
   {"slam",      's',    0,      0,  "Run SLAM algorithm" },
+  {"mask",      'm',    "FILE", 0,  "Mask ORB extraction" },
   {"outfile",   'o',    "FILE", 0,  "SLAM algorithm outfile" },
   {"vocabulary",'v',    "FILE", 0,  "Vocabulary file for SLAM algorithm" },
   {"yolo",      'y',    0,      0,  "Run yolo instance segmentation" },
@@ -125,7 +126,7 @@ static struct argp_option options[] = {
 struct arguments
 {
   char *args[1];                /* arg1 & arg2 */
-  int quiet, log, replay, slam, yolo, gui;
+  int quiet, log, replay, slam, mask, yolo, gui;
   char *output_file, *rosbag, *vocabulary;
 };
 
@@ -152,6 +153,9 @@ parse_opt (int key, char *arg, struct argp_state *state)
       break;
     case 's':
       arguments->slam = 1;
+      break;
+    case 'm':
+      arguments->mask = 1;
       break;
     case 'y':
       arguments->yolo = 1;
@@ -202,6 +206,7 @@ main (int argc, char **argv)
     arguments.log = 0;
     arguments.replay = 0;
     arguments.slam = 0;
+    arguments.mask = 0;
     arguments.yolo = 0;
     arguments.gui = 1;
     arguments.rosbag = "-";
@@ -211,7 +216,7 @@ main (int argc, char **argv)
     argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
     printf ("CONFIGURATION_FILE = %s\nROSBAG_FILE = %s\nOUTPUT_FILE = %s\nVOCABULARY_FILE = %s\n"
-            "QUIET = %s\nLOG = %s\nREPLAY = %s\nSLAM = %s\nYOLO = %s\nGUI = %s\n",
+            "QUIET = %s\nLOG = %s\nREPLAY = %s\nSLAM = %s\nMASK = %s\nYOLO = %s\nGUI = %s\n",
             arguments.args[0],
             arguments.rosbag,
             arguments.output_file,
@@ -220,6 +225,7 @@ main (int argc, char **argv)
             arguments.log ? "yes" : "no",
             arguments.replay ? "yes" : "no",
             arguments.slam ? "yes" : "no",
+            arguments.mask ? "yes" : "no",
             arguments.yolo ? "yes" : "no",
             arguments.gui ? "yes" : "no");
 
@@ -508,7 +514,7 @@ main (int argc, char **argv)
     if(arguments.slam)
     {
         // Create SLAM system. It initializes all system threads and gets ready to process frames.
-        pSLAM = new ORB_SLAM3::System(arguments.vocabulary, arguments.args[0],ORB_SLAM3::System::IMU_RGBD, arguments.gui, 0, file_name);
+        pSLAM = new ORB_SLAM3::System(arguments.vocabulary, arguments.args[0], ORB_SLAM3::System::IMU_RGBD, arguments.gui, 0, file_name, arguments.mask);
         imageScale = pSLAM->GetImageScale();
     }
     else
