@@ -60,10 +60,6 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
         {
             std::cout << "*Error with the camera parameters in the config file*" << std::endl;
         }
-        
-        if(!_maskFile.empty()){
-            orbMaskFile = _maskFile;
-        }
 
         // Load ORB parameters
         bool b_parse_orb = ParseORBParamFile(fSettings);
@@ -96,6 +92,10 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
 
             }
         }
+    }
+
+    if(!_maskFile.empty()){
+        orbMaskFile = _maskFile;
     }
 
     initID = 0; lastID = 0;
@@ -1557,15 +1557,13 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
 
     if(!orbMaskFile.empty() && orbMask.empty()){
         orbMask = cv::imread(orbMaskFile, cv::IMREAD_GRAYSCALE);
-        cv::resize(orbMask, orbMask, cv::Size(), mImGray.size()[1] / orbMask.size()[1], mImGray.size()[0] / orbMask.size()[0], cv::INTER_LINEAR);
+        cv::resize(orbMask, orbMask, cv::Size(), mImGray.size().width / orbMask.size().width, mImGray.size().height / orbMask.size().height, cv::INTER_LINEAR);
         cv::threshold(orbMask, orbMask, 0.5, 1, cv::THRESH_BINARY);
     }
-
     if (mSensor == System::RGBD)
         mCurrentFrame = Frame(mImGray,imDepth,orbMask,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera);
     else if(mSensor == System::IMU_RGBD)
-        mCurrentFrame = Frame(mImGray,imDepth,orbMask,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera,&mLastFrame,*mpImuCalib);
-
+        mCurrentFrame = Frame(mImGray,imDepth,orbMask,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera,&mLastFrame,*mpImuCalib);;
 
 
 

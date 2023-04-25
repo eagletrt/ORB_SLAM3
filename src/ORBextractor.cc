@@ -849,12 +849,6 @@ namespace ORB_SLAM3
                             // include only keypoints whose corresponding pixel value in the mask is greater than 0 
                             if (mvMaskPyramid[0].empty() || mvMaskPyramid[level].at<uchar>(vit->pt.y, vit->pt.x) > 0)
                             {
-                                cv::Rect roi(vit->pt.x - PATCH_SIZE/2, vit->pt.y - PATCH_SIZE/2, PATCH_SIZE, PATCH_SIZE);
-                                cv::Mat patch = mvImagePyramid[level](roi);
-                                // if the patch is empty the keypoint is skipped
-                                if (cv::countNonZero(patch) == 0) {
-                                    continue;
-                                }
                                 // offset x,y coordinates of the keypoint by the x,y coordinates of the the grid cell
                                 (*vit).pt.x+=j*wCell;
                                 (*vit).pt.y+=i*hCell;
@@ -1086,13 +1080,13 @@ namespace ORB_SLAM3
 
         Mat image = _image.getMat();
         Mat mask = _mask.getMat();
+
         assert(image.type() == CV_8UC1 );
 
         // Pre-compute the scale pyramid
         ComputePyramid(image, mask);
 
         vector < vector<KeyPoint> > allKeypoints;
-
         ComputeKeyPointsOctTree(allKeypoints);
         //ComputeKeyPointsOld(allKeypoints);
 
@@ -1175,25 +1169,29 @@ namespace ORB_SLAM3
             Mat temp(wholeSize, image.type()), masktemp(wholeSize, mask.type());
 
             mvImagePyramid[level] = temp(Rect(EDGE_THRESHOLD, EDGE_THRESHOLD, sz.width, sz.height));
-            mvMaskPyramid[level] = masktemp(Rect(EDGE_THRESHOLD, EDGE_THRESHOLD, sz.width, sz.height));
+            if(!mask.empty())
+                mvMaskPyramid[level] = masktemp(Rect(EDGE_THRESHOLD, EDGE_THRESHOLD, sz.width, sz.height));
 
             // Compute the resized image and mask
             if( level != 0 )
             {
                 resize(mvImagePyramid[level-1], mvImagePyramid[level], sz, 0, 0, INTER_LINEAR);
-                resize(mvMaskPyramid[level-1],  mvMaskPyramid[level],  sz, 0, 0, INTER_LINEAR);
+                if(!mask.empty())
+                    resize(mvMaskPyramid[level-1],  mvMaskPyramid[level],  sz, 0, 0, INTER_LINEAR);
 
                 copyMakeBorder(mvImagePyramid[level], temp, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD,
                                BORDER_REFLECT_101+BORDER_ISOLATED);
-                copyMakeBorder(mvMaskPyramid[level], masktemp, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD,
-                           BORDER_REFLECT_101+BORDER_ISOLATED);
+                if(!mask.empty())
+                    copyMakeBorder(mvMaskPyramid[level], masktemp, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD,
+                            BORDER_REFLECT_101+BORDER_ISOLATED);
             }
             else
             {
                 copyMakeBorder(image, temp, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD,
                                BORDER_REFLECT_101);
-                copyMakeBorder(mask, masktemp, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD,
-                               BORDER_REFLECT_101);
+                if(!mask.empty())
+                    copyMakeBorder(mask, masktemp, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD,
+                                BORDER_REFLECT_101);
             }
         }
 

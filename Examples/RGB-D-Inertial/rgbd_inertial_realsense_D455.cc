@@ -126,8 +126,8 @@ static struct argp_option options[] = {
 struct arguments
 {
   char *args[1];                /* arg1 & arg2 */
-  int quiet, log, replay, slam, mask, yolo, gui;
-  char *output_file, *rosbag, *vocabulary;
+  int quiet, log, replay, slam, yolo, gui;
+  char *output_file, *rosbag, *vocabulary, *mask;
 };
 
 /* Parse a single option. */
@@ -155,7 +155,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
       arguments->slam = 1;
       break;
     case 'm':
-      arguments->mask = 1;
+      arguments->mask = arg;
       break;
     case 'y':
       arguments->yolo = 1;
@@ -206,32 +206,32 @@ main (int argc, char **argv)
     arguments.log = 0;
     arguments.replay = 0;
     arguments.slam = 0;
-    arguments.mask = 0;
+    arguments.mask = "";
     arguments.yolo = 0;
     arguments.gui = 1;
-    arguments.rosbag = "-";
-    arguments.output_file = "-";
-    arguments.vocabulary = "-";
+    arguments.rosbag = "";
+    arguments.output_file = "";
+    arguments.vocabulary = "";
 
     argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
-    printf ("CONFIGURATION_FILE = %s\nROSBAG_FILE = %s\nOUTPUT_FILE = %s\nVOCABULARY_FILE = %s\n"
-            "QUIET = %s\nLOG = %s\nREPLAY = %s\nSLAM = %s\nMASK = %s\nYOLO = %s\nGUI = %s\n",
+    printf ("CONFIGURATION_FILE = %s\nROSBAG_FILE = %s\nOUTPUT_FILE = %s\nVOCABULARY_FILE = %s\nMASK = %s\n"
+            "QUIET = %s\nLOG = %s\nREPLAY = %s\nSLAM = %s\nYOLO = %s\nGUI = %s\n",
             arguments.args[0],
             arguments.rosbag,
             arguments.output_file,
             arguments.vocabulary,
+            arguments.mask,
             arguments.quiet ? "yes" : "no",
             arguments.log ? "yes" : "no",
             arguments.replay ? "yes" : "no",
             arguments.slam ? "yes" : "no",
-            arguments.mask ? "yes" : "no",
             arguments.yolo ? "yes" : "no",
             arguments.gui ? "yes" : "no");
 
     string file_name;
 
-    if (arguments.output_file != "-") {
+    if (arguments.output_file != "") {
         file_name = arguments.output_file;
     }
 
@@ -317,7 +317,7 @@ main (int argc, char **argv)
         cfg.enable_stream(RS2_STREAM_GYRO, RS2_FORMAT_MOTION_XYZ32F);
 
     }
-    else if (arguments.rosbag != "-")
+    else if (arguments.rosbag != "")
     {
         if(std::filesystem::exists(arguments.rosbag) && std::filesystem::is_regular_file(arguments.rosbag))
         {
@@ -371,7 +371,7 @@ main (int argc, char **argv)
     {
         std::unique_lock<std::mutex> lock(imu_mutex);
         if(rs2::frameset fs = frame.as<rs2::frameset>())
-        {
+        {   
             count_im_buffer++;
             rs2::playback playback = pipe.get_active_profile().get_device();
             //std::cout<<playback.get_position()<<"/"<<playback.get_duration()<<endl;
@@ -438,7 +438,7 @@ main (int argc, char **argv)
         }
     };
 
-    if (arguments.log == 1 && arguments.rosbag != "-"){
+    if (arguments.log == 1 && arguments.rosbag != ""){
         std::string rosbag = arguments.rosbag;
         std::string destination;
         std::cout << rosbag.ends_with(".bag") << std::endl;
@@ -640,10 +640,9 @@ main (int argc, char **argv)
         std::chrono::steady_clock::time_point t_Start_Track = std::chrono::steady_clock::now();
     #endif
         if (arguments.slam && !pSLAM->isShutDown())
-        {
+        {   
             // Pass the image to the SLAM system
             pSLAM->TrackRGBD(im, depth, timestamp, vImuMeas);
-
     #ifdef REGISTER_TIMES
             std::chrono::steady_clock::time_point t_End_Track = std::chrono::steady_clock::now();
             t_track = t_resize + std::chrono::duration_cast<std::chrono::duration<double,std::milli> >(t_End_Track - t_Start_Track).count();
