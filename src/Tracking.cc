@@ -1557,7 +1557,9 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
 
     if(!orbMaskFile.empty() && orbMask.empty()){
         orbMask = cv::imread(orbMaskFile, cv::IMREAD_GRAYSCALE);
-        cv::resize(orbMask, orbMask, cv::Size(), mImGray.size().width / orbMask.size().width, mImGray.size().height / orbMask.size().height, cv::INTER_LINEAR);
+        //std::cout<<"mImGray size width: "<<mImGray.size().width<<"\nmImGray size height: "<<mImGray.size().height<<"\norbMask size width: "<<orbMask.size().width<<"\norbMask size height: "<<orbMask.size().height<<std::endl;
+        //cv::resize(orbMask, orbMask, mImGray.size(), mImGray.size().width / orbMask.size().width, mImGray.size().height / orbMask.size().height, cv::INTER_LINEAR);
+        cv::resize(orbMask, orbMask, mImGray.size(), cv::INTER_LINEAR);
         cv::threshold(orbMask, orbMask, 0.5, 1, cv::THRESH_BINARY);
     }
     if (mSensor == System::RGBD)

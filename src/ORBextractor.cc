@@ -847,13 +847,15 @@ namespace ORB_SLAM3
                         for(vector<cv::KeyPoint>::iterator vit=vKeysCell.begin(); vit!=vKeysCell.end();vit++)
                         {
                             // include only keypoints whose corresponding pixel value in the mask is greater than 0 
+                            //std::cout<<"test ComputeKeyPointsOctTree level "<<level<<std::endl;
+                            //std::cout<<"test ComputeKeyPointsOctTree pyramid "<<mvMaskPyramid[0].empty()<<std::endl;
+                            //std::cout<<"test ComputeKeyPointsOctTree access "<<mvMaskPyramid[level].empty()<<std::endl;
+                            
+                            // offset x,y coordinates of the keypoint by the x,y coordinates of the the grid cell
+                            (*vit).pt.x+=j*wCell;
+                            (*vit).pt.y+=i*hCell;
                             if (mvMaskPyramid[0].empty() || mvMaskPyramid[level].at<uchar>(vit->pt.y, vit->pt.x) > 0)
-                            {
-                                // offset x,y coordinates of the keypoint by the x,y coordinates of the the grid cell
-                                (*vit).pt.x+=j*wCell;
-                                (*vit).pt.y+=i*hCell;
                                 vToDistributeKeys.push_back(*vit);
-                            }
                         }
                     }
                 }
