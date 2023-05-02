@@ -41,7 +41,7 @@ namespace ORB_SLAM3
 {
 
 
-Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Atlas *pAtlas, KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor, Settings* settings, const string &_nameSeq):
+Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Atlas *pAtlas, KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor, Settings* settings, const string &_nameSeq, const string &_maskFile):
     mState(NO_IMAGES_YET), mSensor(sensor), mTrackedFr(0), mbStep(false),
     mbOnlyTracking(false), mbMapUpdated(false), mbVO(false), mpORBVocabulary(pVoc), mpKeyFrameDB(pKFDB),
     mbReadyToInitializate(false), mpSystem(pSys), mpViewer(NULL), bStepByStep(false),
@@ -92,6 +92,10 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
 
             }
         }
+    }
+
+    if(!_maskFile.empty()){
+        orbMaskFile = _maskFile;
     }
 
     initID = 0; lastID = 0;
@@ -1551,11 +1555,17 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
     if((fabs(mDepthMapFactor-1.0f)>1e-5) || imDepth.type()!=CV_32F)
         imDepth.convertTo(imDepth,CV_32F,mDepthMapFactor);
 
+    if(!orbMaskFile.empty() && orbMask.empty()){
+        orbMask = cv::imread(orbMaskFile, cv::IMREAD_GRAYSCALE);
+        //std::cout<<"mImGray size width: "<<mImGray.size().width<<"\nmImGray size height: "<<mImGray.size().height<<"\norbMask size width: "<<orbMask.size().width<<"\norbMask size height: "<<orbMask.size().height<<std::endl;
+        //cv::resize(orbMask, orbMask, mImGray.size(), mImGray.size().width / orbMask.size().width, mImGray.size().height / orbMask.size().height, cv::INTER_LINEAR);
+        cv::resize(orbMask, orbMask, mImGray.size(), cv::INTER_LINEAR);
+        cv::threshold(orbMask, orbMask, 0.5, 1, cv::THRESH_BINARY);
+    }
     if (mSensor == System::RGBD)
-        mCurrentFrame = Frame(mImGray,imDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera);
+        mCurrentFrame = Frame(mImGray,imDepth,orbMask,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera);
     else if(mSensor == System::IMU_RGBD)
-        mCurrentFrame = Frame(mImGray,imDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera,&mLastFrame,*mpImuCalib);
-
+        mCurrentFrame = Frame(mImGray,imDepth,orbMask,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera,&mLastFrame,*mpImuCalib);;
 
 
 
