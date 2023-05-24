@@ -50,90 +50,73 @@ include_directories(
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 add_library(${PROJECT_NAME} SHARED
-src/System.cc
-src/Tracking.cc
-src/LocalMapping.cc
-src/LoopClosing.cc
-src/ORBextractor.cc
-src/ORBmatcher.cc
-src/FrameDrawer.cc
-src/Converter.cc
-src/MapPoint.cc
-src/KeyFrame.cc
-src/Atlas.cc
-src/Map.cc
-src/MapDrawer.cc
-src/Optimizer.cc
-src/Frame.cc
-src/KeyFrameDatabase.cc
-src/Sim3Solver.cc
-src/Viewer.cc
-src/ImuTypes.cc
-src/G2oTypes.cc
-src/CameraModels/Pinhole.cpp
-src/CameraModels/KannalaBrandt8.cpp
-src/OptimizableTypes.cpp
-src/MLPnPsolver.cpp
-src/GeometricTools.cc
-src/TwoViewReconstruction.cc
-src/Config.cc
-src/Settings.cc
-include/System.h
-include/Tracking.h
-include/LocalMapping.h
-include/LoopClosing.h
-include/ORBextractor.h
-include/ORBmatcher.h
-include/FrameDrawer.h
-include/Converter.h
-include/MapPoint.h
-include/KeyFrame.h
-include/Atlas.h
-include/Map.h
-include/MapDrawer.h
-include/Optimizer.h
-include/Frame.h
-include/KeyFrameDatabase.h
-include/Sim3Solver.h
-include/Viewer.h
-include/ImuTypes.h
-include/G2oTypes.h
-include/CameraModels/GeometricCamera.h
-include/CameraModels/Pinhole.h
-include/CameraModels/KannalaBrandt8.h
-include/OptimizableTypes.h
-include/MLPnPsolver.h
-include/GeometricTools.h
-include/TwoViewReconstruction.h
-include/SerializationUtils.h
-include/Config.h
-include/Settings.h)
+   src/System.cc
+   src/Tracking.cc
+   src/LocalMapping.cc
+   src/LoopClosing.cc
+   src/ORBextractor.cc
+   src/ORBmatcher.cc
+   src/FrameDrawer.cc
+   src/Converter.cc
+   src/MapPoint.cc
+   src/KeyFrame.cc
+   src/Atlas.cc
+   src/Map.cc
+   src/MapDrawer.cc
+   src/Optimizer.cc
+   src/Frame.cc
+   src/KeyFrameDatabase.cc
+   src/Sim3Solver.cc
+   src/Viewer.cc
+   src/ImuTypes.cc
+   src/G2oTypes.cc
+   src/CameraModels/Pinhole.cpp
+   src/CameraModels/KannalaBrandt8.cpp
+   src/OptimizableTypes.cpp
+   src/MLPnPsolver.cpp
+   src/GeometricTools.cc
+   src/TwoViewReconstruction.cc
+   src/Config.cc
+   src/Settings.cc
+   include/System.h
+   include/Tracking.h
+   include/LocalMapping.h
+   include/LoopClosing.h
+   include/ORBextractor.h
+   include/ORBmatcher.h
+   include/FrameDrawer.h
+   include/Converter.h
+   include/MapPoint.h
+   include/KeyFrame.h
+   include/Atlas.h
+   include/Map.h
+   include/MapDrawer.h
+   include/Optimizer.h
+   include/Frame.h
+   include/KeyFrameDatabase.h
+   include/Sim3Solver.h
+   include/Viewer.h
+   include/ImuTypes.h
+   include/G2oTypes.h
+   include/CameraModels/GeometricCamera.h
+   include/CameraModels/Pinhole.h
+   include/CameraModels/KannalaBrandt8.h
+   include/OptimizableTypes.h
+   include/MLPnPsolver.h
+   include/GeometricTools.h
+   include/TwoViewReconstruction.h
+   include/SerializationUtils.h
+   include/Config.h
+   include/Settings.h
+)
 
 target_link_libraries(${PROJECT_NAME}
-${OpenCV_LIBS}
-${EIGEN3_LIBS}
-${Pangolin_LIBRARIES}
-${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
--lboost_serialization
--lcrypto
--ldl
+   ${OpenCV_LIBS}
+   ${EIGEN3_LIBS}
+   ${Pangolin_LIBRARIES}
+   ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
+   ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+   -lboost_serialization
+   -lcrypto
+   -ldl
 )
-
-include_directories(${PROJECT_NAME}
-${realsense_INCLUDE_DIR}
-)
-target_link_libraries(${PROJECT_NAME}
-${realsense2_LIBRARY}
-)
-
-# RGB-D inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D-Inertial)
-
-add_executable(rgbd_inertial_realsense_D435i
-        Examples/RGB-D-Inertial/rgbd_inertial_realsense_D435i.cc)
-target_link_libraries(rgbd_inertial_realsense_D435i ${PROJECT_NAME})
-
-add_executable(rgbd_inertial_realsense_D455
-        Examples/RGB-D-Inertial/rgbd_inertial_realsense_D455.cc)
-target_link_libraries(rgbd_inertial_realsense_D455 ${PROJECT_NAME})
