@@ -610,6 +610,10 @@ main (int argc, char **argv)
 
         im = cv::Mat(cv::Size(width_img, height_img), CV_8UC3, (void*)(color_frame.get_data()), cv::Mat::AUTO_STEP);
         depth = cv::Mat(cv::Size(width_img, height_img), CV_16U, (void*)(depth_frame.get_data()), cv::Mat::AUTO_STEP);
+        
+        double min, max;
+        cv::minMaxLoc(depth, &min, &max);
+        std::cout << max << std::endl;
 
         for(int i=0; i<vGyro.size(); ++i)
         {
