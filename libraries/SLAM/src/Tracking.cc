@@ -1551,7 +1551,6 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
             cvtColor(mImColor,mImColor,cv::COLOR_BGRA2RGB);
         }
     }
-
     if((fabs(mDepthMapFactor-1.0f)>1e-5) || imDepth.type()!=CV_32F)
         imDepth.convertTo(imDepth,CV_32F,mDepthMapFactor);
 
@@ -1560,7 +1559,8 @@ Sophus::SE3f Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, co
         //std::cout<<"mImGray size width: "<<mImGray.size().width<<"\nmImGray size height: "<<mImGray.size().height<<"\norbMask size width: "<<orbMask.size().width<<"\norbMask size height: "<<orbMask.size().height<<std::endl;
         //cv::resize(orbMask, orbMask, mImGray.size(), mImGray.size().width / orbMask.size().width, mImGray.size().height / orbMask.size().height, cv::INTER_LINEAR);
         cv::resize(orbMask, orbMask, mImGray.size(), cv::INTER_LINEAR);
-        cv::threshold(orbMask, orbMask, 0.5, 1, cv::THRESH_BINARY);
+        cv::threshold(orbMask, orbMask, 128, 255, cv::THRESH_BINARY);
+        cv::imwrite("test_output.png", orbMask);
     }
     if (mSensor == System::RGBD)
         mCurrentFrame = Frame(mImGray,imDepth,orbMask,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mpCamera);

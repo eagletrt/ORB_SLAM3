@@ -854,7 +854,7 @@ namespace ORB_SLAM3
                             // offset x,y coordinates of the keypoint by the x,y coordinates of the the grid cell
                             (*vit).pt.x+=j*wCell;
                             (*vit).pt.y+=i*hCell;
-                            if (mvMaskPyramid[0].empty() || mvMaskPyramid[level].at<uchar>(vit->pt.y, vit->pt.x) > 0)
+                            if (mvMaskPyramid[0].empty() || mvMaskPyramid[level].at<uchar>(vit->pt.y+EDGE_THRESHOLD, vit->pt.x+EDGE_THRESHOLD) != 0)
                                 vToDistributeKeys.push_back(*vit);
                         }
                     }
@@ -1170,9 +1170,7 @@ namespace ORB_SLAM3
 
             Mat temp(wholeSize, image.type()), masktemp(wholeSize, mask.type());
 
-            mvImagePyramid[level] = temp(Rect(EDGE_THRESHOLD, EDGE_THRESHOLD, sz.width, sz.height));
-            if(!mask.empty())
-                mvMaskPyramid[level] = masktemp(Rect(EDGE_THRESHOLD, EDGE_THRESHOLD, sz.width, sz.height));
+            
 
             // Compute the resized image and mask
             if( level != 0 )
@@ -1195,6 +1193,10 @@ namespace ORB_SLAM3
                     copyMakeBorder(mask, masktemp, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD,
                                 BORDER_REFLECT_101);
             }
+            
+            mvImagePyramid[level] = temp(Rect(EDGE_THRESHOLD, EDGE_THRESHOLD, sz.width, sz.height));
+            if(!mask.empty())
+                mvMaskPyramid[level] = masktemp(Rect(EDGE_THRESHOLD, EDGE_THRESHOLD, sz.width, sz.height));
         }
 
     }
