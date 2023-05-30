@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 project(Libs)
 
-set(CMAKE_BUILD_TYPE "Release")
-
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
-
 add_subdirectory(${PROJECT_SOURCE_DIR}/SLAM)
 add_subdirectory(${PROJECT_SOURCE_DIR}/YOLOv8)
 
