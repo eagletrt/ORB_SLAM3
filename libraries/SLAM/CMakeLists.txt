@@ -36,7 +36,12 @@ MESSAGE(${OpenCV_VERSION})
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
 
-include_directories(
+add_subdirectory(${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2)
+add_subdirectory(${PROJECT_SOURCE_DIR}/Thirdparty/g2o)
+add_subdirectory(${PROJECT_SOURCE_DIR}/Thirdparty/Sophus)
+
+set(SLAM_INCLUDE_DIR_INTERNAL
+
    ${PROJECT_SOURCE_DIR}
    ${PROJECT_SOURCE_DIR}/include
    ${PROJECT_SOURCE_DIR}/include/CameraModels
@@ -46,76 +51,54 @@ include_directories(
    ${EIGEN3_INCLUDE_DIR}
    ${Pangolin_INCLUDE_DIRS}
 )
+set(SLAM_INCLUDE_DIR ${SLAM_INCLUDE_DIR_INTERNAL} PARENT_SCOPE)
+
+include_directories(
+   ${SLAM_INCLUDE_DIR_INTERNAL}
+)
+
+message(STATUS "SLAM ---- > ${SLAM_INCLUDE_DIR_INTERNAL}")
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 add_library(${PROJECT_NAME} SHARED
-   src/System.cc
-   src/Tracking.cc
-   src/LocalMapping.cc
-   src/LoopClosing.cc
-   src/ORBextractor.cc
-   src/ORBmatcher.cc
-   src/FrameDrawer.cc
-   src/Converter.cc
-   src/MapPoint.cc
-   src/KeyFrame.cc
-   src/Atlas.cc
-   src/Map.cc
-   src/MapDrawer.cc
-   src/Optimizer.cc
-   src/Frame.cc
-   src/KeyFrameDatabase.cc
-   src/Sim3Solver.cc
-   src/Viewer.cc
-   src/ImuTypes.cc
-   src/G2oTypes.cc
-   src/CameraModels/Pinhole.cpp
-   src/CameraModels/KannalaBrandt8.cpp
-   src/OptimizableTypes.cpp
-   src/MLPnPsolver.cpp
-   src/GeometricTools.cc
-   src/TwoViewReconstruction.cc
-   src/Config.cc
-   src/Settings.cc
-   include/System.h
-   include/Tracking.h
-   include/LocalMapping.h
-   include/LoopClosing.h
-   include/ORBextractor.h
-   include/ORBmatcher.h
-   include/FrameDrawer.h
-   include/Converter.h
-   include/MapPoint.h
-   include/KeyFrame.h
-   include/Atlas.h
-   include/Map.h
-   include/MapDrawer.h
-   include/Optimizer.h
-   include/Frame.h
-   include/KeyFrameDatabase.h
-   include/Sim3Solver.h
-   include/Viewer.h
-   include/ImuTypes.h
-   include/G2oTypes.h
-   include/CameraModels/GeometricCamera.h
-   include/CameraModels/Pinhole.h
-   include/CameraModels/KannalaBrandt8.h
-   include/OptimizableTypes.h
-   include/MLPnPsolver.h
-   include/GeometricTools.h
-   include/TwoViewReconstruction.h
-   include/SerializationUtils.h
-   include/Config.h
-   include/Settings.h
+   ${PROJECT_SOURCE_DIR}/src/System.cc
+   ${PROJECT_SOURCE_DIR}/src/Tracking.cc
+   ${PROJECT_SOURCE_DIR}/src/LocalMapping.cc
+   ${PROJECT_SOURCE_DIR}/src/LoopClosing.cc
+   ${PROJECT_SOURCE_DIR}/src/ORBextractor.cc
+   ${PROJECT_SOURCE_DIR}/src/ORBmatcher.cc
+   ${PROJECT_SOURCE_DIR}/src/FrameDrawer.cc
+   ${PROJECT_SOURCE_DIR}/src/Converter.cc
+   ${PROJECT_SOURCE_DIR}/src/MapPoint.cc
+   ${PROJECT_SOURCE_DIR}/src/KeyFrame.cc
+   ${PROJECT_SOURCE_DIR}/src/Atlas.cc
+   ${PROJECT_SOURCE_DIR}/src/Map.cc
+   ${PROJECT_SOURCE_DIR}/src/MapDrawer.cc
+   ${PROJECT_SOURCE_DIR}/src/Optimizer.cc
+   ${PROJECT_SOURCE_DIR}/src/Frame.cc
+   ${PROJECT_SOURCE_DIR}/src/KeyFrameDatabase.cc
+   ${PROJECT_SOURCE_DIR}/src/Sim3Solver.cc
+   ${PROJECT_SOURCE_DIR}/src/Viewer.cc
+   ${PROJECT_SOURCE_DIR}/src/ImuTypes.cc
+   ${PROJECT_SOURCE_DIR}/src/G2oTypes.cc
+   ${PROJECT_SOURCE_DIR}/src/CameraModels/Pinhole.cpp
+   ${PROJECT_SOURCE_DIR}/src/CameraModels/KannalaBrandt8.cpp
+   ${PROJECT_SOURCE_DIR}/src/OptimizableTypes.cpp
+   ${PROJECT_SOURCE_DIR}/src/MLPnPsolver.cpp
+   ${PROJECT_SOURCE_DIR}/src/GeometricTools.cc
+   ${PROJECT_SOURCE_DIR}/src/TwoViewReconstruction.cc
+   ${PROJECT_SOURCE_DIR}/src/Config.cc
+   ${PROJECT_SOURCE_DIR}/src/Settings.cc
 )
 
 target_link_libraries(${PROJECT_NAME}
    ${OpenCV_LIBS}
    ${EIGEN3_LIBS}
    ${Pangolin_LIBRARIES}
-   ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-   ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+   g2o
+   DBoW2
+   sophus
    -lboost_serialization
    -lcrypto
    -ldl

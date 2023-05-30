@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(yolo_interface VERSION 0.1)
+project(YOLO_INTERFACE)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -19,9 +19,11 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 set(PROJECT_SOURCES
     main.cpp
-
-    inference.h
+    
     inference.cpp
+)
+add_library(${PROJECT_NAME} SHARED
+    inference.cpp 
 )
 
 add_executable(yolo_interface ${PROJECT_SOURCES})

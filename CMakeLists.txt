@@ -30,6 +30,8 @@ include_directories(
   ${PROJECT_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/libraries
   ${realsense_INCLUDE_DIR}
+  
+  ${LIBRARIES_INCLUDE_DIR}
 )
 
 add_library(${PROJECT_NAME} STATIC
@@ -43,6 +45,13 @@ target_link_libraries(${PROJECT_NAME}
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+
+target_link_libraries(${PROJECT_NAME}
+  ${OpenCV_LIBS}
+  ${realsense2_LIBRARY}
+  ORB_SLAM3
+  YOLO_INTERFACE
+)
 
 add_executable(perception_system
         src/rgbd_inertial_realsense_D455.cc)

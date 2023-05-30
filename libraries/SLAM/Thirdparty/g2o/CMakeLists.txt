@@ -90,89 +90,89 @@ ${G2O_EIGEN3_INCLUDE})
 # Include the subdirectories
 ADD_LIBRARY(g2o ${G2O_LIB_TYPE}
 #types
-g2o/types/types_sba.h
-g2o/types/types_six_dof_expmap.h
-g2o/types/types_sba.cpp
-g2o/types/types_six_dof_expmap.cpp
-g2o/types/types_seven_dof_expmap.cpp
-g2o/types/types_seven_dof_expmap.h
-g2o/types/se3quat.h
-g2o/types/se3_ops.h
-g2o/types/se3_ops.hpp
+  ${PROJECT_SOURCE_DIR}/g2o/types/types_sba.h
+  ${PROJECT_SOURCE_DIR}/g2o/types/types_six_dof_expmap.h
+  ${PROJECT_SOURCE_DIR}/g2o/types/types_sba.cpp
+  ${PROJECT_SOURCE_DIR}/g2o/types/types_six_dof_expmap.cpp
+  ${PROJECT_SOURCE_DIR}/g2o/types/types_seven_dof_expmap.cpp
+  ${PROJECT_SOURCE_DIR}/g2o/types/types_seven_dof_expmap.h
+  ${PROJECT_SOURCE_DIR}/g2o/types/se3quat.h
+  ${PROJECT_SOURCE_DIR}/g2o/types/se3_ops.h
+  ${PROJECT_SOURCE_DIR}/g2o/types/se3_ops.hpp
 #core
-g2o/core/base_edge.h
-g2o/core/base_binary_edge.h
-g2o/core/hyper_graph_action.cpp
-g2o/core/base_binary_edge.hpp
-g2o/core/hyper_graph_action.h
-g2o/core/base_multi_edge.h           
-g2o/core/hyper_graph.cpp
-g2o/core/base_multi_edge.hpp         
-g2o/core/hyper_graph.h
-g2o/core/base_unary_edge.h          
-g2o/core/linear_solver.h
-g2o/core/base_unary_edge.hpp         
-g2o/core/marginal_covariance_cholesky.cpp
-g2o/core/base_vertex.h               
-g2o/core/marginal_covariance_cholesky.h
-g2o/core/base_vertex.hpp             
-g2o/core/matrix_structure.cpp
-g2o/core/batch_stats.cpp             
-g2o/core/matrix_structure.h
-g2o/core/batch_stats.h               
-g2o/core/openmp_mutex.h
-g2o/core/block_solver.h              
-g2o/core/block_solver.hpp            
-g2o/core/parameter.cpp               
-g2o/core/parameter.h                 
-g2o/core/cache.cpp                   
-g2o/core/cache.h
-g2o/core/optimizable_graph.cpp       
-g2o/core/optimizable_graph.h         
-g2o/core/solver.cpp                  
-g2o/core/solver.h
-g2o/core/creators.h                 
-g2o/core/optimization_algorithm_factory.cpp
-g2o/core/estimate_propagator.cpp     
-g2o/core/optimization_algorithm_factory.h
-g2o/core/estimate_propagator.h       
-g2o/core/factory.cpp                 
-g2o/core/optimization_algorithm_property.h
-g2o/core/factory.h                   
-g2o/core/sparse_block_matrix.h
-g2o/core/sparse_optimizer.cpp  
-g2o/core/sparse_block_matrix.hpp
-g2o/core/sparse_optimizer.h
-g2o/core/hyper_dijkstra.cpp 
-g2o/core/hyper_dijkstra.h
-g2o/core/parameter_container.cpp     
-g2o/core/parameter_container.h
-g2o/core/optimization_algorithm.cpp 
-g2o/core/optimization_algorithm.h
-g2o/core/optimization_algorithm_with_hessian.cpp 
-g2o/core/optimization_algorithm_with_hessian.h
-g2o/core/optimization_algorithm_levenberg.cpp 
-g2o/core/optimization_algorithm_levenberg.h
-g2o/core/optimization_algorithm_gauss_newton.cpp 
-g2o/core/optimization_algorithm_gauss_newton.h
-g2o/core/jacobian_workspace.cpp 
-g2o/core/jacobian_workspace.h
-g2o/core/robust_kernel.cpp 
-g2o/core/robust_kernel.h
-g2o/core/robust_kernel_factory.cpp
-g2o/core/robust_kernel_factory.h
-g2o/core/robust_kernel_impl.cpp 
-g2o/core/robust_kernel_impl.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/base_edge.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/base_binary_edge.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/hyper_graph_action.cpp
+  ${PROJECT_SOURCE_DIR}/g2o/core/base_binary_edge.hpp
+  ${PROJECT_SOURCE_DIR}/g2o/core/hyper_graph_action.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/base_multi_edge.h           
+  ${PROJECT_SOURCE_DIR}/g2o/core/hyper_graph.cpp
+  ${PROJECT_SOURCE_DIR}/g2o/core/base_multi_edge.hpp         
+  ${PROJECT_SOURCE_DIR}/g2o/core/hyper_graph.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/base_unary_edge.h          
+  ${PROJECT_SOURCE_DIR}/g2o/core/linear_solver.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/base_unary_edge.hpp         
+  ${PROJECT_SOURCE_DIR}/g2o/core/marginal_covariance_cholesky.cpp
+  ${PROJECT_SOURCE_DIR}/g2o/core/base_vertex.h               
+  ${PROJECT_SOURCE_DIR}/g2o/core/marginal_covariance_cholesky.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/base_vertex.hpp             
+  ${PROJECT_SOURCE_DIR}/g2o/core/matrix_structure.cpp
+  ${PROJECT_SOURCE_DIR}/g2o/core/batch_stats.cpp             
+  ${PROJECT_SOURCE_DIR}/g2o/core/matrix_structure.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/batch_stats.h               
+  ${PROJECT_SOURCE_DIR}/g2o/core/openmp_mutex.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/block_solver.h              
+  ${PROJECT_SOURCE_DIR}/g2o/core/block_solver.hpp            
+  ${PROJECT_SOURCE_DIR}/g2o/core/parameter.cpp               
+  ${PROJECT_SOURCE_DIR}/g2o/core/parameter.h                 
+  ${PROJECT_SOURCE_DIR}/g2o/core/cache.cpp                   
+  ${PROJECT_SOURCE_DIR}/g2o/core/cache.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimizable_graph.cpp       
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimizable_graph.h         
+  ${PROJECT_SOURCE_DIR}/g2o/core/solver.cpp                  
+  ${PROJECT_SOURCE_DIR}/g2o/core/solver.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/creators.h                 
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimization_algorithm_factory.cpp
+  ${PROJECT_SOURCE_DIR}/g2o/core/estimate_propagator.cpp     
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimization_algorithm_factory.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/estimate_propagator.h       
+  ${PROJECT_SOURCE_DIR}/g2o/core/factory.cpp                 
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimization_algorithm_property.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/factory.h                   
+  ${PROJECT_SOURCE_DIR}/g2o/core/sparse_block_matrix.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/sparse_optimizer.cpp  
+  ${PROJECT_SOURCE_DIR}/g2o/core/sparse_block_matrix.hpp
+  ${PROJECT_SOURCE_DIR}/g2o/core/sparse_optimizer.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/hyper_dijkstra.cpp 
+  ${PROJECT_SOURCE_DIR}/g2o/core/hyper_dijkstra.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/parameter_container.cpp     
+  ${PROJECT_SOURCE_DIR}/g2o/core/parameter_container.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimization_algorithm.cpp 
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimization_algorithm.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimization_algorithm_with_hessian.cpp 
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimization_algorithm_with_hessian.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimization_algorithm_levenberg.cpp 
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimization_algorithm_levenberg.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimization_algorithm_gauss_newton.cpp 
+  ${PROJECT_SOURCE_DIR}/g2o/core/optimization_algorithm_gauss_newton.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/jacobian_workspace.cpp 
+  ${PROJECT_SOURCE_DIR}/g2o/core/jacobian_workspace.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/robust_kernel.cpp 
+  ${PROJECT_SOURCE_DIR}/g2o/core/robust_kernel.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/robust_kernel_factory.cpp
+  ${PROJECT_SOURCE_DIR}/g2o/core/robust_kernel_factory.h
+  ${PROJECT_SOURCE_DIR}/g2o/core/robust_kernel_impl.cpp 
+  ${PROJECT_SOURCE_DIR}/g2o/core/robust_kernel_impl.h
 #stuff
-g2o/stuff/string_tools.h
-g2o/stuff/color_macros.h 
-g2o/stuff/macros.h
-g2o/stuff/timeutil.cpp
-g2o/stuff/misc.h
-g2o/stuff/timeutil.h
-g2o/stuff/os_specific.c    
-g2o/stuff/os_specific.h
-g2o/stuff/string_tools.cpp
-g2o/stuff/property.cpp       
-g2o/stuff/property.h       
+  ${PROJECT_SOURCE_DIR}/g2o/stuff/string_tools.h
+  ${PROJECT_SOURCE_DIR}/g2o/stuff/color_macros.h 
+  ${PROJECT_SOURCE_DIR}/g2o/stuff/macros.h
+  ${PROJECT_SOURCE_DIR}/g2o/stuff/timeutil.cpp
+  ${PROJECT_SOURCE_DIR}/g2o/stuff/misc.h
+  ${PROJECT_SOURCE_DIR}/g2o/stuff/timeutil.h
+  ${PROJECT_SOURCE_DIR}/g2o/stuff/os_specific.c    
+  ${PROJECT_SOURCE_DIR}/g2o/stuff/os_specific.h
+  ${PROJECT_SOURCE_DIR}/g2o/stuff/string_tools.cpp
+  ${PROJECT_SOURCE_DIR}/g2o/stuff/property.cpp       
+  ${PROJECT_SOURCE_DIR}/g2o/stuff/property.h       
 )

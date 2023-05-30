@@ -9,24 +9,24 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -O3 -march=native")
 
 set(HDRS_DBOW2
-  DBoW2/BowVector.h
-  DBoW2/FORB.h 
-  DBoW2/FClass.h       
-  DBoW2/FeatureVector.h
-  DBoW2/ScoringObject.h   
-  DBoW2/TemplatedVocabulary.h)
+  ${PROJECT_SOURCE_DIR}/DBoW2/BowVector.h
+  ${PROJECT_SOURCE_DIR}/DBoW2/FORB.h 
+  ${PROJECT_SOURCE_DIR}/DBoW2/FClass.h       
+  ${PROJECT_SOURCE_DIR}/DBoW2/FeatureVector.h
+  ${PROJECT_SOURCE_DIR}/DBoW2/ScoringObject.h   
+  ${PROJECT_SOURCE_DIR}/DBoW2/TemplatedVocabulary.h)
 set(SRCS_DBOW2
-  DBoW2/BowVector.cpp
-  DBoW2/FORB.cpp      
-  DBoW2/FeatureVector.cpp
-  DBoW2/ScoringObject.cpp)
+  ${PROJECT_SOURCE_DIR}/DBoW2/BowVector.cpp
+  ${PROJECT_SOURCE_DIR}/DBoW2/FORB.cpp      
+  ${PROJECT_SOURCE_DIR}/DBoW2/FeatureVector.cpp
+  ${PROJECT_SOURCE_DIR}/DBoW2/ScoringObject.cpp)
 
 set(HDRS_DUTILS
-  DUtils/Random.h
-  DUtils/Timestamp.h)
+  ${PROJECT_SOURCE_DIR}/DUtils/Random.h
+  ${PROJECT_SOURCE_DIR}/DUtils/Timestamp.h)
 set(SRCS_DUTILS
-  DUtils/Random.cpp
-  DUtils/Timestamp.cpp)
+  ${PROJECT_SOURCE_DIR}/DUtils/Random.cpp
+  ${PROJECT_SOURCE_DIR}/DUtils/Timestamp.cpp)
 
 
 find_package(OpenCV 4 QUIET)
