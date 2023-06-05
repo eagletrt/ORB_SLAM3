@@ -49,56 +49,14 @@ void exit_loop_handler(int s){
 
 rs2_stream find_stream_to_align(const std::vector<rs2::stream_profile>& streams);
 bool profile_changed(const std::vector<rs2::stream_profile>& current, const std::vector<rs2::stream_profile>& prev);
-
 void interpolateData(const std::vector<double> &vBase_times,
                      std::vector<rs2_vector> &vInterp_data, std::vector<double> &vInterp_times,
                      const rs2_vector &prev_data, const double &prev_time);
-
 rs2_vector interpolateMeasure(const double target_time,
                               const rs2_vector current_data, const double current_time,
                               const rs2_vector prev_data, const double prev_time);
 
-static rs2_option get_sensor_option(const rs2::sensor& sensor)
-{
-    // Sensors usually have several options to control their properties
-    //  such as Exposure, Brightness etc.
-
-    std::cout << "Sensor supports the following options:\n" << std::endl;
-
-    // The following loop shows how to iterate over all available options
-    // Starting from 0 until RS2_OPTION_COUNT (exclusive)
-    for (int i = 0; i < static_cast<int>(RS2_OPTION_COUNT); i++)
-    {
-        rs2_option option_type = static_cast<rs2_option>(i);
-        //SDK enum types can be streamed to get a string that represents them
-        std::cout << "  " << i << ": " << option_type;
-
-        // To control an option, use the following api:
-
-        // First, verify that the sensor actually supports this option
-        if (sensor.supports(option_type))
-        {
-            std::cout << std::endl;
-
-            // Get a human readable description of the option
-            const char* description = sensor.get_option_description(option_type);
-            std::cout << "       Description   : " << description << std::endl;
-
-            // Get the current value of the option
-            float current_value = sensor.get_option(option_type);
-            std::cout << "       Current Value : " << current_value << std::endl;
-
-            //To change the value of an option, please follow the change_sensor_option() function
-        }
-        else
-        {
-            std::cout << " is not supported" << std::endl;
-        }
-    }
-
-    uint32_t selected_sensor_option = 0;
-    return static_cast<rs2_option>(selected_sensor_option);
-}
+void imu_callback(const rs2::frame &frame);
 
 /* Program documentation. */
 static char doc[] =
@@ -270,7 +228,6 @@ main (int argc, char **argv)
                     sensor.set_option(RS2_OPTION_EMITTER_ENABLED, 1); // emitter on for depth information
                 }
                 // std::cout << "  " << index << " : " << sensor.get_info(RS2_CAMERA_INFO_NAME) << std::endl;
-                //get_sensor_option(sensor);
                 if (index == 2){
                     // RGB camera
                     sensor.set_option(RS2_OPTION_ENABLE_AUTO_EXPOSURE,1);
@@ -367,76 +324,6 @@ main (int argc, char **argv)
     rs2::align align(align_to);
     rs2::frameset fsSLAM;
 
-    auto imu_callback = [&](const rs2::frame& frame)
-    {
-        std::unique_lock<std::mutex> lock(imu_mutex);
-        if(rs2::frameset fs = frame.as<rs2::frameset>())
-        {   
-            count_im_buffer++;
-            rs2::playback playback = pipe.get_active_profile().get_device();
-            //std::cout<<playback.get_position()<<"/"<<playback.get_duration()<<endl;
-            double new_timestamp_image = fs.get_timestamp()*1e-3;
-            if(abs(timestamp_image-new_timestamp_image)<0.001){
-                count_im_buffer--;
-                return;
-            }
-
-            if (profile_changed(pipe.get_active_profile().get_streams(), pipe_profile.get_streams()))
-            {
-                //If the profile was changed, update the align object, and also get the new device's depth scale
-                pipe_profile = pipe.get_active_profile();
-                align_to = find_stream_to_align(pipe_profile.get_streams());
-                align = rs2::align(align_to);
-            }
-
-            //Align depth and rgb takes long time, move it out of the interruption to avoid losing IMU measurements
-            fsSLAM = fs;
-
-            timestamp_image = fs.get_timestamp()*1e-3;
-            image_ready = true;
-
-            while(v_gyro_timestamp.size() > v_accel_timestamp_sync.size())
-            {
-                int index = v_accel_timestamp_sync.size();
-                double target_time = v_gyro_timestamp[index];
-
-                v_accel_data_sync.push_back(current_accel_data);
-                v_accel_timestamp_sync.push_back(target_time);
-            }
-
-            lock.unlock();
-            cond_image_rec.notify_all();
-        } else if (rs2::motion_frame m_frame = frame.as<rs2::motion_frame>())
-        {
-            if (m_frame.get_profile().stream_name() == "Gyro")
-            {
-                // It runs at 200Hz
-                v_gyro_data.push_back(m_frame.get_motion_data());
-                v_gyro_timestamp.push_back((m_frame.get_timestamp()+offset)*1e-3);
-            }
-            else if (m_frame.get_profile().stream_name() == "Accel")
-            {
-                // It runs at 60Hz
-                prev_accel_timestamp = current_accel_timestamp;
-                prev_accel_data = current_accel_data;
-
-                current_accel_data = m_frame.get_motion_data();
-                current_accel_timestamp = (m_frame.get_timestamp()+offset)*1e-3;
-
-                while(v_gyro_timestamp.size() > v_accel_timestamp_sync.size())
-                {
-                    int index = v_accel_timestamp_sync.size();
-                    double target_time = v_gyro_timestamp[index];
-
-                    rs2_vector interp_data = interpolateMeasure(target_time, current_accel_data, current_accel_timestamp,
-                                                                prev_accel_data, prev_accel_timestamp);
-
-                    v_accel_data_sync.push_back(interp_data);
-                    v_accel_timestamp_sync.push_back(target_time);
-                }
-            }
-        }
-    };
 
     if (arguments.log == 1 && arguments.rosbag != ""){
         std::string rosbag = arguments.rosbag;
@@ -473,7 +360,7 @@ main (int argc, char **argv)
         cfg.enable_record_to_file(destination);
     }   
 
-    pipe_profile = pipe.start(cfg, imu_callback);
+    pipe_profile = pipe.start(cfg, &imu_callback);
 
 
     vector<ORB_SLAM3::IMU::Point> vImuMeas;
@@ -520,6 +407,11 @@ main (int argc, char **argv)
     else
     {
         imageScale = 1.f;
+    }
+    if(arguments.yolo)
+    {
+        // Create SLAM system. It initializes all system threads and gets ready to process frames.
+        pYOLO = new YOLO::Inference(arguments.model, cv::Size(configWidth, configHeight), NULL, runWithCuda=True);
     }
     double timestamp;
     cv::Mat im, depth;
@@ -654,12 +546,18 @@ main (int argc, char **argv)
     #endif
         }
 
-            // Clear the previous IMU measurements to load the new ones
-            vImuMeas.clear();
+        if (arguments.yolo && !pSLAM->isShutDown())
+        {   
+            std::vector<YOLO::Detection> output = pYOLO->runInference(im);
+        }
+
+        // Clear the previous IMU measurements to load the new ones
+        vImuMeas.clear();
         if(arguments.slam && pSLAM->isShutDown()){
             b_continue_session = false;
         }
     }
+    
     if(arguments.slam && !pSLAM->isShutDown())
     {
         // Stop all threads
@@ -672,7 +570,8 @@ main (int argc, char **argv)
     cout << "System shutdown!\n";
 }
 
-rs2_stream find_stream_to_align(const std::vector<rs2::stream_profile>& streams)
+rs2_stream 
+find_stream_to_align(const std::vector<rs2::stream_profile>& streams)
 {
     //Given a vector of streams, we try to find a depth stream and another stream to align depth with.
     //We prioritize color streams to make the view look better.
@@ -709,7 +608,8 @@ rs2_stream find_stream_to_align(const std::vector<rs2::stream_profile>& streams)
 }
 
 
-bool profile_changed(const std::vector<rs2::stream_profile>& current, const std::vector<rs2::stream_profile>& prev)
+bool 
+profile_changed(const std::vector<rs2::stream_profile>& current, const std::vector<rs2::stream_profile>& prev)
 {
     for (auto&& sp : prev)
     {
@@ -723,9 +623,10 @@ bool profile_changed(const std::vector<rs2::stream_profile>& current, const std:
     return false;
 }
 
-rs2_vector interpolateMeasure(const double target_time,
-                              const rs2_vector current_data, const double current_time,
-                              const rs2_vector prev_data, const double prev_time)
+rs2_vector 
+interpolateMeasure(const double target_time,
+                    const rs2_vector current_data, const double current_time,
+                    const rs2_vector prev_data, const double prev_time)
 {
 
     // If there are not previous information, the current data is propagated
@@ -760,4 +661,76 @@ rs2_vector interpolateMeasure(const double target_time,
     }
 
     return value_interp;
+}
+
+void
+imu_callback(const rs2::frame& frame)
+{
+    std::unique_lock<std::mutex> lock(imu_mutex);
+    if(rs2::frameset fs = frame.as<rs2::frameset>())
+    {   
+        count_im_buffer++;
+        rs2::playback playback = pipe.get_active_profile().get_device();
+        //std::cout<<playback.get_position()<<"/"<<playback.get_duration()<<endl;
+        double new_timestamp_image = fs.get_timestamp()*1e-3;
+        if(abs(timestamp_image-new_timestamp_image)<0.001){
+            count_im_buffer--;
+            return;
+        }
+
+        if (profile_changed(pipe.get_active_profile().get_streams(), pipe_profile.get_streams()))
+        {
+            //If the profile was changed, update the align object, and also get the new device's depth scale
+            pipe_profile = pipe.get_active_profile();
+            align_to = find_stream_to_align(pipe_profile.get_streams());
+            align = rs2::align(align_to);
+        }
+
+        //Align depth and rgb takes long time, move it out of the interruption to avoid losing IMU measurements
+        fsSLAM = fs;
+
+        timestamp_image = fs.get_timestamp()*1e-3;
+        image_ready = true;
+
+        while(v_gyro_timestamp.size() > v_accel_timestamp_sync.size())
+        {
+            int index = v_accel_timestamp_sync.size();
+            double target_time = v_gyro_timestamp[index];
+
+            v_accel_data_sync.push_back(current_accel_data);
+            v_accel_timestamp_sync.push_back(target_time);
+        }
+
+        lock.unlock();
+        cond_image_rec.notify_all();
+    } else if (rs2::motion_frame m_frame = frame.as<rs2::motion_frame>())
+    {
+        if (m_frame.get_profile().stream_name() == "Gyro")
+        {
+            // It runs at 200Hz
+            v_gyro_data.push_back(m_frame.get_motion_data());
+            v_gyro_timestamp.push_back((m_frame.get_timestamp()+offset)*1e-3);
+        }
+        else if (m_frame.get_profile().stream_name() == "Accel")
+        {
+            // It runs at 60Hz
+            prev_accel_timestamp = current_accel_timestamp;
+            prev_accel_data = current_accel_data;
+
+            current_accel_data = m_frame.get_motion_data();
+            current_accel_timestamp = (m_frame.get_timestamp()+offset)*1e-3;
+
+            while(v_gyro_timestamp.size() > v_accel_timestamp_sync.size())
+            {
+                int index = v_accel_timestamp_sync.size();
+                double target_time = v_gyro_timestamp[index];
+
+                rs2_vector interp_data = interpolateMeasure(target_time, current_accel_data, current_accel_timestamp,
+                                                            prev_accel_data, prev_accel_timestamp);
+
+                v_accel_data_sync.push_back(interp_data);
+                v_accel_timestamp_sync.push_back(target_time);
+            }
+        }
+    }
 }

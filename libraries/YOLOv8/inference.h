@@ -12,44 +12,47 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/dnn.hpp>
 
-struct Detection
+namespace YOLO
 {
-    int class_id{0};
-    std::string className{};
-    float confidence{0.0};
-    cv::Scalar color{};
-    cv::Rect box{};
-    cv::Mat boxMask;
-};
+    struct Detection
+    {
+        int class_id{0};
+        std::string className{};
+        float confidence{0.0};
+        cv::Scalar color{};
+        cv::Rect box{};
+        cv::Mat boxMask;
+    };
 
-class Inference
-{
-public:
-    Inference(const std::string &onnxModelPath, const cv::Size &modelInputShape = {640, 640}, const std::string &classesTxtFile = "", const bool &runWithCuda = true);
-    std::vector<Detection> runInference(const cv::Mat &input);
+    class Inference
+    {
+    public:
+        Inference(const std::string &onnxModelPath, const cv::Size &modelInputShape = {640, 640}, const std::string &classesTxtFile = "", const bool &runWithCuda = true);
+        std::vector<Detection> runInference(const cv::Mat &input);
 
-private:
-    void loadClassesFromFile();
-    void loadOnnxNetwork();
-    cv::Mat formatToSquare(const cv::Mat &source);
+    private:
+        void loadClassesFromFile();
+        void loadOnnxNetwork();
+        cv::Mat formatToSquare(const cv::Mat &source);
 
-    cv::Mat GetMask(const cv::Mat &maskProposal, const cv::Mat &mask_protos, cv::Rect &temp_rect, cv::Size src_img_shape);
+        cv::Mat GetMask(const cv::Mat &maskProposal, const cv::Mat &mask_protos, cv::Rect &temp_rect, cv::Size src_img_shape);
 
-    std::string modelPath{};
-    std::string classesPath{};
-    bool cudaEnabled{};
+        std::string modelPath{};
+        std::string classesPath{};
+        bool cudaEnabled{};
 
-    std::vector<std::string> classes{"seg_blue_cone", "seg_large_orange_cone", "seg_orange_cone", "seg_unknown_cone", "seg_yellow_cone"};
+        std::vector<std::string> classes{"seg_blue_cone", "seg_large_orange_cone", "seg_orange_cone", "seg_unknown_cone", "seg_yellow_cone"};
 
-    cv::Size2f modelShape{};
+        cv::Size2f modelShape{};
 
-    float modelConfidenceThreshold {0.25};
-    float modelScoreThreshold      {0.45};
-    float modelNMSThreshold        {0.50};
+        float modelConfidenceThreshold {0.25};
+        float modelScoreThreshold      {0.45};
+        float modelNMSThreshold        {0.50};
 
-    bool letterBoxForSquare = true;
+        bool letterBoxForSquare = true;
 
-    cv::dnn::Net net;
-};
+        cv::dnn::Net net;
+    };
+}
 
 #endif // INFERENCE_H
