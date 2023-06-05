@@ -259,7 +259,9 @@ namespace YOLO
 
     void Inference::loadOnnxNetwork()
     {
+        std::cout << "\nTest" << std::endl;
         net = cv::dnn::readNetFromONNX(modelPath);
+        std::cout << "\nTest2" << std::endl;
         if (cudaEnabled)
         {
             std::cout << "\nRunning on CUDA" << std::endl;

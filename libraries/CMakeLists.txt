@@ -11,8 +11,10 @@ set(LIBRARIES_INCLUDE_DIR
     ${PROJECT_SOURCE_DIR}/YOLOv8
 
     ${SLAM_INCLUDE_DIR}
+    ${YOLO_INCLUDE_DIR}
 
     PARENT_SCOPE
 )
 
-message(STATUS "libraries ----> ${SLAM_INCLUDE_DIR}")
+message(STATUS "slam libraries ----> ${SLAM_INCLUDE_DIR}")
+message(STATUS "yolo libraries ----> ${YOLO_INCLUDE_DIR}")

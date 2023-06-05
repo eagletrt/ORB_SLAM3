@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     //
 
     // Note that in this example the classes are hard-coded and 'classes.txt' is a place holder.
-    Inference inf(projectBasePath + "/best-seg-640-480.onnx", cv::Size(480, 640), "classes.txt", runOnGPU);
+    YOLO::Inference inf(projectBasePath + "/best-seg-640-480.onnx", cv::Size(480, 640), "classes.txt", runOnGPU);
 
     cv::VideoCapture capture(projectBasePath + "/test.mp4");
     cv::Mat frame;
@@ -52,14 +52,14 @@ int main(int argc, char **argv)
 
         // Inference starts here...
         
-        std::vector<Detection> output = inf.runInference(frame);
+        std::vector<YOLO::Detection> output = inf.runInference(frame);
 
         int detections = output.size();
         //std::cout << "Number of detections:" << detections << std::endl;
 
         for (int i = 0; i < detections; ++i)
         {
-            Detection detection = output[i];
+            YOLO::Detection detection = output[i];
 
             cv::Rect box = detection.box;
             cv::Scalar color = detection.color;

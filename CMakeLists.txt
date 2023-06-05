@@ -20,7 +20,7 @@ else()
 endif()
 
 find_package(realsense2)
-find_package(OpenCV 4.7.0)
+find_package(OpenCV REQUIRED)
 
 add_subdirectory(
   ${PROJECT_SOURCE_DIR}/libraries
@@ -55,4 +55,4 @@ target_link_libraries(${PROJECT_NAME}
 
 add_executable(perception_system
         src/rgbd_inertial_realsense_D455.cc)
-target_link_libraries(perception_system ${PROJECT_NAME})
+target_link_libraries(perception_system ${PROJECT_NAME} ${OpenCV_LIBS})

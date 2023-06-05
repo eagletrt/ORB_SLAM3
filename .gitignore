@@ -8,6 +8,8 @@
 !*/
 
 *.bag
+*.mp4
+*.onnx
 .vscode/
 
 CMakeLists.txt.user

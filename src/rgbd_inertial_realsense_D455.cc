@@ -29,13 +29,14 @@
 
 #include <condition_variable>
 
-#include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
 
 #include <librealsense2/rs.hpp>
 #include "librealsense2/rsutil.h"
 
 
 #include "System.h"
+#include "inference.h"
 #include <argp.h>
 
 using namespace std;
@@ -56,8 +57,6 @@ rs2_vector interpolateMeasure(const double target_time,
                               const rs2_vector current_data, const double current_time,
                               const rs2_vector prev_data, const double prev_time);
 
-void imu_callback(const rs2::frame &frame);
-
 /* Program documentation. */
 static char doc[] =
   "Argp example #3 -- a program with options and arguments using argp";
@@ -76,6 +75,8 @@ static struct argp_option options[] = {
   {"outfile",   'o',    "FILE", 0,  "SLAM algorithm outfile" },
   {"vocabulary",'v',    "FILE", 0,  "Vocabulary file for SLAM algorithm" },
   {"yolo",      'y',    0,      0,  "Run yolo instance segmentation" },
+  {"model",     'w',    "FILE", 0,  "Model for cone detection" },
+  {"cuda",      'c',    0,      0,  "Run cone detection with cuda support" },
   {"nogui",     'g',    0,      0,  "Run without GUI" },
   { 0 }
 };
@@ -84,8 +85,8 @@ static struct argp_option options[] = {
 struct arguments
 {
   char *args[1];                /* arg1 & arg2 */
-  int quiet, log, replay, slam, yolo, gui;
-  char *output_file, *rosbag, *vocabulary, *mask;
+  int quiet, log, replay, slam, yolo, gui, cuda;
+  char *output_file, *rosbag, *vocabulary, *mask, *weights;
 };
 
 /* Parse a single option. */
@@ -127,6 +128,12 @@ parse_opt (int key, char *arg, struct argp_state *state)
     case 'v':
       arguments->vocabulary = arg;
       break;
+    case 'w':
+      arguments->weights = arg;
+      break;
+    case 'c':
+      arguments->cuda = 1;
+      break;
     case 'g':
       arguments->gui = 0;
       break;
@@ -166,6 +173,8 @@ main (int argc, char **argv)
     arguments.slam = 0;
     arguments.mask = "";
     arguments.yolo = 0;
+    arguments.weights = "";
+    arguments.cuda = 0;
     arguments.gui = 1;
     arguments.rosbag = "";
     arguments.output_file = "";
@@ -173,13 +182,14 @@ main (int argc, char **argv)
 
     argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
-    printf ("CONFIGURATION_FILE = %s\nROSBAG_FILE = %s\nOUTPUT_FILE = %s\nVOCABULARY_FILE = %s\nMASK = %s\n"
+    printf ("CONFIGURATION_FILE = %s\nROSBAG_FILE = %s\nOUTPUT_FILE = %s\nVOCABULARY_FILE = %s\nMASK = %s\nWEIGHTS = %s\n"
             "QUIET = %s\nLOG = %s\nREPLAY = %s\nSLAM = %s\nYOLO = %s\nGUI = %s\n",
             arguments.args[0],
             arguments.rosbag,
             arguments.output_file,
             arguments.vocabulary,
             arguments.mask,
+            arguments.weights,
             arguments.quiet ? "yes" : "no",
             arguments.log ? "yes" : "no",
             arguments.replay ? "yes" : "no",
@@ -324,6 +334,76 @@ main (int argc, char **argv)
     rs2::align align(align_to);
     rs2::frameset fsSLAM;
 
+    auto imu_callback = [&](const rs2::frame& frame)
+    {
+        std::unique_lock<std::mutex> lock(imu_mutex);
+        if(rs2::frameset fs = frame.as<rs2::frameset>())
+        {   
+            count_im_buffer++;
+            rs2::playback playback = pipe.get_active_profile().get_device();
+            //std::cout<<playback.get_position()<<"/"<<playback.get_duration()<<endl;
+            double new_timestamp_image = fs.get_timestamp()*1e-3;
+            if(abs(timestamp_image-new_timestamp_image)<0.001){
+                count_im_buffer--;
+                return;
+            }
+
+            if (profile_changed(pipe.get_active_profile().get_streams(), pipe_profile.get_streams()))
+            {
+                //If the profile was changed, update the align object, and also get the new device's depth scale
+                pipe_profile = pipe.get_active_profile();
+                align_to = find_stream_to_align(pipe_profile.get_streams());
+                align = rs2::align(align_to);
+            }
+
+            //Align depth and rgb takes long time, move it out of the interruption to avoid losing IMU measurements
+            fsSLAM = fs;
+
+            timestamp_image = fs.get_timestamp()*1e-3;
+            image_ready = true;
+
+            while(v_gyro_timestamp.size() > v_accel_timestamp_sync.size())
+            {
+                int index = v_accel_timestamp_sync.size();
+                double target_time = v_gyro_timestamp[index];
+
+                v_accel_data_sync.push_back(current_accel_data);
+                v_accel_timestamp_sync.push_back(target_time);
+            }
+
+            lock.unlock();
+            cond_image_rec.notify_all();
+        } else if (rs2::motion_frame m_frame = frame.as<rs2::motion_frame>())
+        {
+            if (m_frame.get_profile().stream_name() == "Gyro")
+            {
+                // It runs at 200Hz
+                v_gyro_data.push_back(m_frame.get_motion_data());
+                v_gyro_timestamp.push_back((m_frame.get_timestamp()+offset)*1e-3);
+            }
+            else if (m_frame.get_profile().stream_name() == "Accel")
+            {
+                // It runs at 60Hz
+                prev_accel_timestamp = current_accel_timestamp;
+                prev_accel_data = current_accel_data;
+
+                current_accel_data = m_frame.get_motion_data();
+                current_accel_timestamp = (m_frame.get_timestamp()+offset)*1e-3;
+
+                while(v_gyro_timestamp.size() > v_accel_timestamp_sync.size())
+                {
+                    int index = v_accel_timestamp_sync.size();
+                    double target_time = v_gyro_timestamp[index];
+
+                    rs2_vector interp_data = interpolateMeasure(target_time, current_accel_data, current_accel_timestamp,
+                                                                prev_accel_data, prev_accel_timestamp);
+
+                    v_accel_data_sync.push_back(interp_data);
+                    v_accel_timestamp_sync.push_back(target_time);
+                }
+            }
+        }
+    };
 
     if (arguments.log == 1 && arguments.rosbag != ""){
         std::string rosbag = arguments.rosbag;
@@ -360,7 +440,7 @@ main (int argc, char **argv)
         cfg.enable_record_to_file(destination);
     }   
 
-    pipe_profile = pipe.start(cfg, &imu_callback);
+    pipe_profile = pipe.start(cfg, imu_callback);
 
 
     vector<ORB_SLAM3::IMU::Point> vImuMeas;
@@ -397,6 +477,7 @@ main (int argc, char **argv)
 
     float imageScale;
     ORB_SLAM3::System* pSLAM;
+    YOLO::Inference* pYOLO;
 
     if(arguments.slam)
     {
@@ -411,7 +492,7 @@ main (int argc, char **argv)
     if(arguments.yolo)
     {
         // Create SLAM system. It initializes all system threads and gets ready to process frames.
-        pYOLO = new YOLO::Inference(arguments.model, cv::Size(configWidth, configHeight), NULL, runWithCuda=True);
+        pYOLO = new YOLO::Inference(arguments.weights, cv::Size(1280, 768), "", arguments.cuda);
     }
     double timestamp;
     cv::Mat im, depth;
@@ -546,9 +627,42 @@ main (int argc, char **argv)
     #endif
         }
 
-        if (arguments.yolo && !pSLAM->isShutDown())
-        {   
-            std::vector<YOLO::Detection> output = pYOLO->runInference(im);
+        if (arguments.yolo)
+        {     
+            cv::Mat frame;
+            cv::cvtColor(im, frame, cv::COLOR_RGB2BGR);
+            std::vector<YOLO::Detection> output = pYOLO->runInference(frame);
+            int detections = output.size();
+            for (int i = 0; i < detections; ++i)
+            {
+                YOLO::Detection detection = output[i];
+
+                cv::Rect box = detection.box;
+                cv::Scalar color = detection.color;
+                cv::Mat mask = detection.boxMask;
+
+                // Detection box
+                cv::rectangle(frame, box, color, 2);
+
+                // Detection mask
+                frame(box).setTo(color, mask);
+
+                // Detection box text
+                std::string classString = detection.className + ' ' + std::to_string(detection.confidence).substr(0, 4);
+                cv::Size textSize = cv::getTextSize(classString, cv::FONT_HERSHEY_DUPLEX, 1, 2, 0);
+                cv::Rect textBox(box.x, box.y - 40, textSize.width + 10, textSize.height + 20);
+
+                cv::rectangle(frame, textBox, color, cv::FILLED);
+                cv::putText(frame, classString, cv::Point(box.x + 5, box.y - 10), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 0), 2, 0);
+            }
+            // Inference ends here...
+
+            // This is only for preview purposes
+            float scale = 1;
+            cv::resize(frame, frame, cv::Size(frame.cols*scale, frame.rows*scale));
+            cv::imshow("Inference", frame);
+
+            cv::waitKey(1);
         }
 
         // Clear the previous IMU measurements to load the new ones
@@ -661,76 +775,4 @@ interpolateMeasure(const double target_time,
     }
 
     return value_interp;
-}
-
-void
-imu_callback(const rs2::frame& frame)
-{
-    std::unique_lock<std::mutex> lock(imu_mutex);
-    if(rs2::frameset fs = frame.as<rs2::frameset>())
-    {   
-        count_im_buffer++;
-        rs2::playback playback = pipe.get_active_profile().get_device();
-        //std::cout<<playback.get_position()<<"/"<<playback.get_duration()<<endl;
-        double new_timestamp_image = fs.get_timestamp()*1e-3;
-        if(abs(timestamp_image-new_timestamp_image)<0.001){
-            count_im_buffer--;
-            return;
-        }
-
-        if (profile_changed(pipe.get_active_profile().get_streams(), pipe_profile.get_streams()))
-        {
-            //If the profile was changed, update the align object, and also get the new device's depth scale
-            pipe_profile = pipe.get_active_profile();
-            align_to = find_stream_to_align(pipe_profile.get_streams());
-            align = rs2::align(align_to);
-        }
-
-        //Align depth and rgb takes long time, move it out of the interruption to avoid losing IMU measurements
-        fsSLAM = fs;
-
-        timestamp_image = fs.get_timestamp()*1e-3;
-        image_ready = true;
-
-        while(v_gyro_timestamp.size() > v_accel_timestamp_sync.size())
-        {
-            int index = v_accel_timestamp_sync.size();
-            double target_time = v_gyro_timestamp[index];
-
-            v_accel_data_sync.push_back(current_accel_data);
-            v_accel_timestamp_sync.push_back(target_time);
-        }
-
-        lock.unlock();
-        cond_image_rec.notify_all();
-    } else if (rs2::motion_frame m_frame = frame.as<rs2::motion_frame>())
-    {
-        if (m_frame.get_profile().stream_name() == "Gyro")
-        {
-            // It runs at 200Hz
-            v_gyro_data.push_back(m_frame.get_motion_data());
-            v_gyro_timestamp.push_back((m_frame.get_timestamp()+offset)*1e-3);
-        }
-        else if (m_frame.get_profile().stream_name() == "Accel")
-        {
-            // It runs at 60Hz
-            prev_accel_timestamp = current_accel_timestamp;
-            prev_accel_data = current_accel_data;
-
-            current_accel_data = m_frame.get_motion_data();
-            current_accel_timestamp = (m_frame.get_timestamp()+offset)*1e-3;
-
-            while(v_gyro_timestamp.size() > v_accel_timestamp_sync.size())
-            {
-                int index = v_accel_timestamp_sync.size();
-                double target_time = v_gyro_timestamp[index];
-
-                rs2_vector interp_data = interpolateMeasure(target_time, current_accel_data, current_accel_timestamp,
-                                                            prev_accel_data, prev_accel_timestamp);
-
-                v_accel_data_sync.push_back(interp_data);
-                v_accel_timestamp_sync.push_back(target_time);
-            }
-        }
-    }
 }
