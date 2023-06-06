@@ -631,38 +631,35 @@ main (int argc, char **argv)
         {     
             cv::Mat frame;
             cv::cvtColor(im, frame, cv::COLOR_RGB2BGR);
+            cv::copyMakeBorder(frame, frame, (768-frame.rows)/2, (768-frame.rows)/2, 0, 0, cv::BORDER_CONSTANT, cv::Scalar(0));
             std::vector<YOLO::Detection> output = pYOLO->runInference(frame);
-            int detections = output.size();
-            for (int i = 0; i < detections; ++i)
-            {
-                YOLO::Detection detection = output[i];
+            if(arguments.gui){
+                int detections = output.size();
+                for (int i = 0; i < detections; ++i)
+                {
+                    YOLO::Detection detection = output[i];
 
-                cv::Rect box = detection.box;
-                cv::Scalar color = detection.color;
-                cv::Mat mask = detection.boxMask;
+                    cv::Rect box = detection.box;
+                    cv::Scalar color = detection.color;
+                    cv::Mat mask = detection.boxMask;
 
-                // Detection box
-                cv::rectangle(frame, box, color, 2);
+                    // Detection box
+                    cv::rectangle(frame, box, color, 2);
 
-                // Detection mask
-                frame(box).setTo(color, mask);
+                    // Detection mask
+                    frame(box).setTo(color, mask);
 
-                // Detection box text
-                std::string classString = detection.className + ' ' + std::to_string(detection.confidence).substr(0, 4);
-                cv::Size textSize = cv::getTextSize(classString, cv::FONT_HERSHEY_DUPLEX, 1, 2, 0);
-                cv::Rect textBox(box.x, box.y - 40, textSize.width + 10, textSize.height + 20);
+                    // Detection box text
+                    std::string classString = detection.className + ' ' + std::to_string(detection.confidence).substr(0, 4);
+                    cv::Size textSize = cv::getTextSize(classString, cv::FONT_HERSHEY_DUPLEX, 1, 2, 0);
+                    cv::Rect textBox(box.x, box.y - 40, textSize.width + 10, textSize.height + 20);
 
-                cv::rectangle(frame, textBox, color, cv::FILLED);
-                cv::putText(frame, classString, cv::Point(box.x + 5, box.y - 10), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 0), 2, 0);
+                    cv::rectangle(frame, textBox, color, cv::FILLED);
+                    cv::putText(frame, classString, cv::Point(box.x + 5, box.y - 10), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 0), 2, 0);
+                }
+                cv::imshow("Inference", frame);
+                cv::waitKey(1);
             }
-            // Inference ends here...
-
-            // This is only for preview purposes
-            float scale = 1;
-            cv::resize(frame, frame, cv::Size(frame.cols*scale, frame.rows*scale));
-            cv::imshow("Inference", frame);
-
-            cv::waitKey(1);
         }
 
         // Clear the previous IMU measurements to load the new ones
