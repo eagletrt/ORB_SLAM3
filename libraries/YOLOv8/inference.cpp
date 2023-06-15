@@ -34,7 +34,7 @@ namespace YOLO
 
         bool yolov8 = false;
         // yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
-        // yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
+        // yolov8 has an output of shape (batchSize, 5+4+32,  8400) (Num classes + box[x,y,w,h])
         if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
         {
             yolov8 = true;
