@@ -37,7 +37,6 @@ MESSAGE("OPENCV VERSION:")
 MESSAGE(${OpenCV_VERSION})
 
 find_package(Eigen3 3.1.0 REQUIRED)
-find_package(Pangolin REQUIRED)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/Thirdparty/Pangolin)
 add_subdirectory(${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2)
